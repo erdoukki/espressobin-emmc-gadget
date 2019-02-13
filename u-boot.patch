@@ -1,0 +1,27 @@
+diff --git a/include/configs/mvebu_armada-common.h b/include/configs/mvebu_armada-common.h
+index 84be257c17..af86d9c12b 100644
+--- a/include/configs/mvebu_armada-common.h
++++ b/include/configs/mvebu_armada-common.h
+@@ -153,6 +153,22 @@ defined(CONFIG_TARGET_MVEBU_ARMADA_37XX) && defined(CONFIG_MV88E6XXX_SWITCH)
+ #endif
+ #endif
+ 
++
++#define CONFIG_ENV_IS_IN_FAT
++#undef  CONFIG_ENV_SIZE
++#define CONFIG_ENV_SIZE                        (128 * 1024)
++#define CONFIG_ENV_FAT_DEVICE_AND_PART         "1:1"
++#define CONFIG_ENV_FAT_INTERFACE               "mmc"
++#define CONFIG_ENV_FAT_FILE                    "uboot.env"
++#define CONFIG_SYS_REDUNDAND_ENVIRONMENT
++#define CONFIG_SYS_MMC_ENV_DEV		1 /* A3700 emmc is on sdhci-1*/
++#define CONFIG_SYS_MMC_ENV_PART		0 /* 0-DATA, 1-BOOT0, 2-BOOT1 */
++
++#define CONFIG_FAT_WRITE
++#define CONFIG_SUPPORT_RAW_INITRD
++
++
++
+ /*
+  * SATA/SCSI/AHCI configuration
+  */

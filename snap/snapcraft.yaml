@@ -1,0 +1,58 @@
+name: espresso
+version: 16-0.1
+summary: Espressobin
+description: |
+ Bootloader files and partitoning data to create a
+ bootable Ubuntu Core image for Espressobin.
+type: gadget
+architectures:
+  - arm64
+confinement: strict
+grade: stable
+
+parts:
+  uboot:
+    plugin: make
+    source: https://github.com/MarvellEmbeddedProcessors/u-boot-marvell.git
+    source-type: git
+    source-branch: u-boot-2018.03-armada-18.12
+    artifacts: [MLO, u-boot.img]
+    override-build: |
+      git apply ../../../u-boot.patch
+      #git apply ../../../mvebu_espressobinemmc.patch.diff
+      export CROSS_COMPILE=aarch64-linux-gnu-
+      make mvebu_espressobin-88f3720_defconfig
+      make DEVICE_TREE=armada-3720-espressobin-emmc
+      tools/mkenvimage -r -s 131072 -o $SNAPCRAFT_PART_INSTALL/uboot.env ../../../uboot.env.in
+      ln -s uboot.env $SNAPCRAFT_PART_INSTALL/uboot.conf
+  atf:
+    after: [a3700]
+    source: https://github.com/MarvellEmbeddedProcessors/atf-marvell.git
+    source-branch: atf-v1.5-armada-18.12
+    plugin: make
+    override-build: |
+      export CROSS_COMPILE=aarch64-linux-gnu-
+      export BL33=`pwd`/../../uboot/build/u-boot.bin
+      make DEBUG=1 USE_COHERENT_MEM=0 LOG_LEVEL=20 SECURE=0 CLOCKSPRESET=CPU_1000_DDR_800 DDR_TOPOLOGY=5 MV_DDR_PATH=`pwd`/../../mv-ddr/build BOOTDEV=SPINOR PARTNUM=0 WTP=`pwd`/../../a3700/build PLAT=a3700 all fip
+      mkdir -p $SNAPCRAFT_PART_INSTALL/boot-assets
+      cp build/a3700/debug/flash-image.bin $SNAPCRAFT_PART_INSTALL/boot-assets
+
+  a3700:
+     after: [mv-ddr]
+     source: https://github.com/MarvellEmbeddedProcessors/A3700-utils-marvell.git
+     source-branch: A3700_utils-armada-18.12
+     plugin: nil
+  mv-ddr:
+     after: [uboot]
+     source: https://github.com/MarvellEmbeddedProcessors/mv-ddr-marvell.git
+     source-branch: mv_ddr-armada-18.12
+     plugin: nil
+
+slots:
+  i2c-0:
+    interface: i2c
+    path: /dev/i2c-0
+  spidev0.1:
+    interface: spi
+    path: /dev/spidev0.1
+
